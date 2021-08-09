@@ -61,8 +61,8 @@ contract("ArtifyVesting", (accounts) => {
     assert.equal("1591818631", vestingInfo.start, "not same");
 
     /** add new whitelist member to contract and get member */
-    await artifyVesting.addWhitelist(accounts[0], "1200000000", 1647808129, 1, { from: accounts[0] });
-    console.log("Set Whitelist Address : ", accounts[0].address);
+    await artifyVesting.addWhitelist(accounts[0], "1200000000", 1, { from: accounts[0] });
+    console.log("Set Whitelist Address : ", accounts[0]);
     console.log("Set Whitelist Artify amount : 1200000000 ");
     const whitelist = await artifyVesting.getWhitelist(accounts[0], { from: accounts[0] });
     console.log("Get Whitelist Address : ", whitelist.wallet.toString());

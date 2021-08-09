@@ -26,6 +26,18 @@ module.exports = {
       gasPrice: 240000000000,
       skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
     },
+    // rinkeby: {
+    //   provider: () =>
+    //     new HDWalletProvider({
+    //       mnemonic: {
+    //         phrase: process.env.MNEMONIC,
+    //       },
+    //       providerOrUrl: process.env.RINKEBY,
+    //       numberOfAddresses: 1,
+    //       shareNonce: true,
+    //     }),
+    //   network_id: "4",
+    // },
     testnet: {
       provider: () => new HDWalletProvider(process.env.MNEMONIC, `https://data-seed-prebsc-1-s1.binance.org:8545`),
       network_id: 97,
