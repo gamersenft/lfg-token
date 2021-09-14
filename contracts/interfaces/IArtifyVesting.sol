@@ -28,12 +28,6 @@ interface IArtifyVesting {
 
     /**
      *
-     * @dev this event call when distirbuted token revoked
-     *
-     */
-    event Revoked(address wallet);
-    /**
-     *
      * @dev define vesting informations like x%, x months
      *
      */
@@ -42,7 +36,6 @@ interface IArtifyVesting {
         uint256 cliff;
         uint256 start;
         uint256 duration;
-        bool revocable;
         bool active;
     }
 
@@ -58,7 +51,6 @@ interface IArtifyVesting {
         uint256 joinDate;
         uint256 vestingOption;
         bool active;
-        bool revoke;
     }
 
     /**
@@ -71,8 +63,7 @@ interface IArtifyVesting {
         uint256 _strategy,
         uint256 _cliff,
         uint256 _start,
-        uint256 _duration,
-        bool _revocable
+        uint256 _duration
     ) external returns (bool);
 
     function addWhitelist(

@@ -34,7 +34,6 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
      * @param {uint256} duration in seconds of the cliff in which tokens will begin to vest
      * @param {uint256} vesting start date
      * @param {uint256} duration in seconds of the period in which the tokens will vest
-     * @param {bool} whether the vesting is revocable or not
      *
      * @return {bool} status of the updating vesting plan
      *
@@ -43,8 +42,7 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
         uint256 _strategy,
         uint256 _cliff,
         uint256 _start,
-        uint256 _duration,
-        bool _revocable
+        uint256 _duration
     ) external override onlyOwner returns (bool) {
         require(_strategy > 0, "Strategy should be correct");
         require(
@@ -56,7 +54,6 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
         vestingPools[_strategy].cliff = _start.add(_cliff);
         vestingPools[_strategy].start = _start;
         vestingPools[_strategy].duration = _duration;
-        vestingPools[_strategy].revocable = _revocable;
         vestingPools[_strategy].active = true;
 
         return true;
@@ -232,8 +229,7 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
             now >=
             vestingPools[whitelistPools[_wallet].vestingOption].start.add(
                 vestingPools[whitelistPools[_wallet].vestingOption].duration
-            ) ||
-            whitelistPools[_wallet].revoke
+            )
         ) {
             return whitelistPools[_wallet].artifyAmount;
         } else {
@@ -251,31 +247,6 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
                             .duration
                     );
         }
-    }
-
-    /**
-     *
-     * @dev allow the owner to revoke the vesting
-     *
-     */
-    function revoke(address _wallet) public onlyOwner {
-        require(whitelistPools[_wallet].active, "User is not in whitelist");
-        require(
-            vestingPools[whitelistPools[_wallet].vestingOption].revocable,
-            "it is not able to revoke"
-        );
-        require(!whitelistPools[_wallet].revoke, "already revoked");
-
-        uint256 balance = whitelistPools[_wallet].artifyAmount;
-
-        uint256 unreleased = calculateReleasableAmount(_wallet);
-        uint256 refund = balance.sub(unreleased);
-
-        whitelistPools[_wallet].revoke = true;
-
-        _artifyToken.safeTransfer(address(this), refund);
-
-        Revoked(_wallet);
     }
 
     /**
