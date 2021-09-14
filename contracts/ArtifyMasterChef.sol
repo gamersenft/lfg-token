@@ -47,8 +47,7 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
     // The Artify TOKEN!
     IERC20 public artify;
-    // Dev address.
-    address public devAddress;
+
     // Deposit Fee address
     address public feeAddress;
     // Reward tokens holder address
@@ -91,7 +90,6 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     function initialize(
         address _artify,
-        address _devAddress,
         address _feeAddress,
         address _rewardHolder,
         uint256 _startBlock,
@@ -101,7 +99,7 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         rewardHolder = _rewardHolder;
         startBlock = _startBlock;
         artifyPerBlock = _artifyPerBlock;
-        devAddress = _devAddress;
+
         feeAddress = _feeAddress;
         totalAllocPoint = 0;
         __Ownable_init();
@@ -121,10 +119,7 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _harvestInterval,
         bool _withUpdate
     ) public onlyOwner {
-        require(
-            _depositFeeBP <= 10000,
-            "add: invalid deposit fee basis points"
-        );
+        require(_depositFeeBP <= 500, "add: invalid deposit fee basis points");
         require(
             _harvestInterval <= MAXIMUM_HARVEST_INTERVAL,
             "add: invalid harvest interval"
@@ -378,13 +373,6 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         } else {
             artify.transferFrom(_from, _to, _amount);
         }
-    }
-
-    // Update dev address by the previous dev.
-    function setDevAddress(address _devAddress) public {
-        require(msg.sender == devAddress, "setDevAddress: FORBIDDEN");
-        require(_devAddress != address(0), "setDevAddress: ZERO");
-        devAddress = _devAddress;
     }
 
     function setFeeAddress(address _feeAddress) public {
