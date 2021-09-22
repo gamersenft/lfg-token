@@ -57,7 +57,7 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Bonus muliplier for early artify makers.
     uint256 public constant BONUS_MULTIPLIER = 1;
     // Max harvest interval: 14 days.
-    uint256 public constant MAXIMUM_HARVEST_INTERVAL = 14 days;
+    uint256 public constant MAXIMUM_HARVEST_INTERVAL = 10 days;
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
@@ -151,10 +151,7 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _harvestInterval,
         bool _withUpdate
     ) public onlyOwner {
-        require(
-            _depositFeeBP <= 10000,
-            "set: invalid deposit fee basis points"
-        );
+        require(_depositFeeBP <= 500, "set: invalid deposit fee basis points");
         require(
             _harvestInterval <= MAXIMUM_HARVEST_INTERVAL,
             "set: invalid harvest interval"
@@ -348,16 +345,6 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             user.rewardLockedUp = user.rewardLockedUp.add(pending);
             totalLockedUpRewards = totalLockedUpRewards.add(pending);
             emit RewardLockedUp(msg.sender, _pid, pending);
-        }
-    }
-
-    // Safe artify transfer function, just in case if rounding error causes pool to not have enough ARTIFYs.
-    function safeArtifyTransfer(address _to, uint256 _amount) internal {
-        uint256 artifyBal = artify.balanceOf(address(this));
-        if (_amount > artifyBal) {
-            artify.transfer(_to, artifyBal);
-        } else {
-            artify.transfer(_to, _amount);
         }
     }
 
