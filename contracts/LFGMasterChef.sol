@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: MIT
+
+//** LFG MasterChef Contract */
+//** Author Alex Hong : LFG Platform 2021.9 */
+
 pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
@@ -8,14 +12,14 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
-// MasterChef is the master of Artify. He can make Artify and he is a fair guy.
+// MasterChef is the master of LFG. He can make LFG and he is a fair guy.
 //
 // Note that it's ownable and the owner wields tremendous power. The ownership
-// will be transferred to a governance smart contract once ARTIFYs is sufficiently
+// will be transferred to a governance smart contract once LFGs is sufficiently
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
-contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     // Info of each user.
@@ -25,13 +29,13 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 rewardLockedUp; // Reward locked up.
         uint256 nextHarvestUntil; // When can the user harvest again.
         //
-        // We do some fancy math here. Basically, any point in time, the amount of ARTIFYs
+        // We do some fancy math here. Basically, any point in time, the amount of LFGs
         // entitled to a user but is pending to be distributed is:
         //
-        //   pending reward = (user.amount * pool.accArtifyPerShare) - user.rewardDebt
+        //   pending reward = (user.amount * pool.accLFGPerShare) - user.rewardDebt
         //
         // Whenever a user deposits or withdraws LP tokens to a pool. Here's what happens:
-        //   1. The pool's `accArtifyPerShare` (and `lastRewardBlock`) gets updated.
+        //   1. The pool's `accLFGPerShare` (and `lastRewardBlock`) gets updated.
         //   2. User receives the pending reward sent to his/her address.
         //   3. User's `amount` gets updated.
         //   4. User's `rewardDebt` gets updated.
@@ -39,22 +43,22 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Info of each pool.
     struct PoolInfo {
         IERC20 lpToken; // Address of LP token contract.
-        uint256 allocPoint; // How many allocation points assigned to this pool. ARTIFYs to distribute per block.
-        uint256 lastRewardBlock; // Last block number that ARTIFYs distribution occurs.
-        uint256 accArtifyPerShare; // Accumulated ARTIFYs per share, times 1e12. See below.
+        uint256 allocPoint; // How many allocation points assigned to this pool. LFGs to distribute per block.
+        uint256 lastRewardBlock; // Last block number that LFGs distribution occurs.
+        uint256 accLFGPerShare; // Accumulated LFGs per share, times 1e12. See below.
         uint16 depositFeeBP; // Deposit fee in basis points
         uint256 harvestInterval; // Harvest interval in seconds
     }
-    // The Artify TOKEN!
-    IERC20 public artify;
+    // The LFG TOKEN!
+    IERC20 public lfg;
 
     // Deposit Fee address
     address public feeAddress;
     // Reward tokens holder address
     address public rewardHolder;
-    // ARTIFYs tokens created per block. 0.5 Artify per block. 10% to artify charity ( address )
-    uint256 public artifyPerBlock;
-    // Bonus muliplier for early artify makers.
+    // LFGs tokens created per block. 0.5 LFG per block. 10% to lfg charity ( address )
+    uint256 public lfgPerBlock;
+    // Bonus muliplier for early lfg makers.
     uint256 public constant BONUS_MULTIPLIER = 1;
     // Max harvest interval: 14 days.
     uint256 public constant MAXIMUM_HARVEST_INTERVAL = 10 days;
@@ -64,7 +68,7 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
     // Total allocation points. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint;
-    // The block number when ARTIFYs mining starts.
+    // The block number when LFGs mining starts.
     uint256 public startBlock;
     // Total locked up rewards
     uint256 public totalLockedUpRewards;
@@ -89,16 +93,16 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     );
 
     function initialize(
-        address _artify,
+        address _lfg,
         address _feeAddress,
         address _rewardHolder,
         uint256 _startBlock,
-        uint256 _artifyPerBlock
+        uint256 _lfgPerBlock
     ) public initializer {
-        artify = IERC20(_artify);
+        lfg = IERC20(_lfg);
         rewardHolder = _rewardHolder;
         startBlock = _startBlock;
-        artifyPerBlock = _artifyPerBlock;
+        lfgPerBlock = _lfgPerBlock;
 
         feeAddress = _feeAddress;
         totalAllocPoint = 0;
@@ -136,14 +140,14 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                 lpToken: _lpToken,
                 allocPoint: _allocPoint,
                 lastRewardBlock: lastRewardBlock,
-                accArtifyPerShare: 0,
+                accLFGPerShare: 0,
                 depositFeeBP: _depositFeeBP,
                 harvestInterval: _harvestInterval
             })
         );
     }
 
-    // Update the given pool's ARTIFYs allocation point and deposit fee. Can only be called by the owner.
+    // Update the given pool's LFGs allocation point and deposit fee. Can only be called by the owner.
     function set(
         uint256 _pid,
         uint256 _allocPoint,
@@ -176,36 +180,36 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         return _to.sub(_from).mul(BONUS_MULTIPLIER);
     }
 
-    // View function to see pending ARTIFYs on frontend.
-    function pendingArtify(uint256 _pid, address _user)
+    // View function to see pending LFGs on frontend.
+    function pendingLFG(uint256 _pid, address _user)
         external
         view
         returns (uint256)
     {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
-        uint256 accArtifyPerShare = pool.accArtifyPerShare;
+        uint256 accLFGPerShare = pool.accLFGPerShare;
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
         if (block.number > pool.lastRewardBlock && lpSupply != 0) {
             uint256 multiplier = getMultiplier(
                 pool.lastRewardBlock,
                 block.number
             );
-            uint256 artifyReward = multiplier
-                .mul(artifyPerBlock)
+            uint256 lfgReward = multiplier
+                .mul(lfgPerBlock)
                 .mul(pool.allocPoint)
                 .div(totalAllocPoint);
-            accArtifyPerShare = accArtifyPerShare.add(
-                artifyReward.mul(1e12).div(lpSupply)
+            accLFGPerShare = accLFGPerShare.add(
+                lfgReward.mul(1e12).div(lpSupply)
             );
         }
-        uint256 pending = user.amount.mul(accArtifyPerShare).div(1e12).sub(
+        uint256 pending = user.amount.mul(accLFGPerShare).div(1e12).sub(
             user.rewardDebt
         );
         return pending.add(user.rewardLockedUp);
     }
 
-    // View function to see if user can harvest ARTIFYs.
+    // View function to see if user can harvest LFGs.
     function canHarvest(uint256 _pid, address _user)
         public
         view
@@ -235,24 +239,24 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             return;
         }
         uint256 multiplier = getMultiplier(pool.lastRewardBlock, block.number);
-        uint256 artifyReward = multiplier
-            .mul(artifyPerBlock)
+        uint256 lfgReward = multiplier
+            .mul(lfgPerBlock)
             .mul(pool.allocPoint)
             .div(totalAllocPoint);
 
-        pool.accArtifyPerShare = pool.accArtifyPerShare.add(
-            artifyReward.mul(1e12).div(lpSupply)
+        pool.accLFGPerShare = pool.accLFGPerShare.add(
+            lfgReward.mul(1e12).div(lpSupply)
         );
         pool.lastRewardBlock = block.number;
     }
 
-    // Deposit LP tokens to MasterChef for ARTIFYs allocation.
+    // Deposit LP tokens to MasterChef for LFGs allocation.
     function deposit(uint256 _pid, uint256 _amount) public nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
 
-        payOrLockupPendingArtify(_pid);
+        payOrLockupPendingLFG(_pid);
         if (_amount > 0) {
             pool.lpToken.safeTransferFrom(
                 address(msg.sender),
@@ -267,7 +271,7 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                 user.amount = user.amount.add(_amount);
             }
         }
-        user.rewardDebt = user.amount.mul(pool.accArtifyPerShare).div(1e12);
+        user.rewardDebt = user.amount.mul(pool.accLFGPerShare).div(1e12);
         emit Deposit(msg.sender, _pid, _amount);
     }
 
@@ -277,30 +281,30 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
         updatePool(_pid);
-        payOrLockupPendingArtify(_pid);
+        payOrLockupPendingLFG(_pid);
         if (_amount > 0) {
             user.amount = user.amount.sub(_amount);
             pool.lpToken.safeTransfer(address(msg.sender), _amount);
         }
-        user.rewardDebt = user.amount.mul(pool.accArtifyPerShare).div(1e12);
+        user.rewardDebt = user.amount.mul(pool.accLFGPerShare).div(1e12);
         emit Withdraw(msg.sender, _pid, _amount);
     }
 
-    // Compound tokens to Artify pool.
+    // Compound tokens to LFG pool.
     function compound(uint256 _pid) public nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(
-            address(pool.lpToken) == address(artify),
+            address(pool.lpToken) == address(lfg),
             "compound: not able to compound"
         );
         updatePool(_pid);
-        uint256 pending = user.amount.mul(pool.accArtifyPerShare).div(1e12).sub(
+        uint256 pending = user.amount.mul(pool.accLFGPerShare).div(1e12).sub(
             user.rewardDebt
         );
-        safeArtifyTransferFrom(rewardHolder, address(this), pending);
+        safeLFGTransferFrom(rewardHolder, address(this), pending);
         user.amount = user.amount.add(pending);
-        user.rewardDebt = user.amount.mul(pool.accArtifyPerShare).div(1e12);
+        user.rewardDebt = user.amount.mul(pool.accLFGPerShare).div(1e12);
         emit Compound(msg.sender, _pid, pending);
     }
 
@@ -317,14 +321,14 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         emit EmergencyWithdraw(msg.sender, _pid, amount);
     }
 
-    // Pay or lockup pending ARTIFYs.
-    function payOrLockupPendingArtify(uint256 _pid) internal {
+    // Pay or lockup pending LFGs.
+    function payOrLockupPendingLFG(uint256 _pid) internal {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         if (user.nextHarvestUntil == 0) {
             user.nextHarvestUntil = block.timestamp.add(pool.harvestInterval);
         }
-        uint256 pending = user.amount.mul(pool.accArtifyPerShare).div(1e12).sub(
+        uint256 pending = user.amount.mul(pool.accLFGPerShare).div(1e12).sub(
             user.rewardDebt
         );
         if (canHarvest(_pid, msg.sender)) {
@@ -339,7 +343,7 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                     pool.harvestInterval
                 );
                 // send rewards
-                safeArtifyTransferFrom(rewardHolder, msg.sender, totalRewards);
+                safeLFGTransferFrom(rewardHolder, msg.sender, totalRewards);
             }
         } else if (pending > 0) {
             user.rewardLockedUp = user.rewardLockedUp.add(pending);
@@ -348,17 +352,17 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         }
     }
 
-    // Safe artify transfer function, just in case if rounding error causes pool to not have enough ARTIFYs.
-    function safeArtifyTransferFrom(
+    // Safe LFG transfer function, just in case if rounding error causes pool to not have enough LFGs.
+    function safeLFGTransferFrom(
         address _from,
         address _to,
         uint256 _amount
     ) internal {
-        uint256 artifyBal = artify.balanceOf(rewardHolder);
-        if (_amount > artifyBal) {
+        uint256 lfgBal = lfg.balanceOf(rewardHolder);
+        if (_amount > lfgBal) {
             revert("Not enough balance");
         } else {
-            artify.transferFrom(_from, _to, _amount);
+            lfg.transferFrom(_from, _to, _amount);
         }
     }
 
@@ -375,9 +379,9 @@ contract ArtifyMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
 
     // Pancake has to add hidden dummy pools in order to alter the emission, here we make it simple and transparent to all.
-    function updateEmissionRate(uint256 _artifyPerBlock) public onlyOwner {
+    function updateEmissionRate(uint256 _lfgPerBlock) public onlyOwner {
         massUpdatePools();
-        emit EmissionRateUpdated(msg.sender, artifyPerBlock, _artifyPerBlock);
-        artifyPerBlock = _artifyPerBlock;
+        emit EmissionRateUpdated(msg.sender, lfgPerBlock, _lfgPerBlock);
+        lfgPerBlock = _lfgPerBlock;
     }
 }

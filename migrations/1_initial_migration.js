@@ -1,32 +1,29 @@
-//** Artify Migration Script */
-//** Author Alex Hong : Artify Crowfunding 2021.8 */
+//** LFG Migration Script */
+//** Author Alex Hong : LFG NFT Platform 2021.9 */
 
 require("dotenv").config();
 
-const ArtifyToken = artifacts.require("ArtifyToken");
-const ArtifyVesting = artifacts.require("ArtifyVesting");
-const ArtifyTempToken = artifacts.require("ArtifyTempToken");
-const ArtifyMasterChef = artifacts.require("ArtifyMasterChef");
+const LFGToken = artifacts.require("LFGToken");
+const LFGVesting = artifacts.require("LFGVesting");
+const LFGMasterChef = artifacts.require("LFGMasterChef");
 module.exports = async function (deployer, network, accounts) {
-  /** migrate Artify token to the network */
-  // await deployer.deploy(ArtifyToken, "Artify", "ART", "1000000000000000000000000000", { from: accounts[0] });
+  /** migrate LFG token to the network */
+  // await deployer.deploy(LFGToken, "LFG", "LFG", "1000000000000000000000000000", { from: accounts[0] });
 
-  // await deployer.deploy(ArtifyTempToken, "Artify", "ART", "1000000000000000000000000000", { from: accounts[0] });
+  // /** migrate LFG Vesting contract to network */
+  // await deployer.deploy(LFGVesting, { from: accounts[0] });
 
-  // /** migrate Artify Vesting contract to network */
-  // await deployer.deploy(ArtifyVesting, { from: accounts[0] });
-
-  // /** get instance of deployed ArtifyVesting contract */
-  // const vestingInstance = await ArtifyVesting.deployed();
+  // /** get instance of deployed LFGVesting contract */
+  // const vestingInstance = await LFGVesting.deployed();
 
   // /** transfer ownership to initial deployer */
   // await vestingInstance.transferOwnership(accounts[0], { from: accounts[0] });
 
-  // /** migrate Artify Vesting contract to network */
-  await deployer.deploy(ArtifyMasterChef, { from: accounts[0] });
+  // /** migrate LFG Vesting contract to network */
+  await deployer.deploy(LFGMasterChef, { from: accounts[0] });
 
-  // /** get instance of deployed ArtifyVesting contract */
-  const chefInstance = await ArtifyMasterChef.deployed();
+  // /** get instance of deployed LFGVesting contract */
+  const chefInstance = await LFGMasterChef.deployed();
 
   // /** transfer ownership to initial deployer */
   // await chefInstance.transferOwnership(accounts[0], { from: accounts[0] });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-//** Artify ERC20 TOKEN */
-//** Author Alex Hong : Artify NFT Platform 2021.8 */
+//** LFG ERC20 TOKEN */
+//** Author Alex Hong : LFG NFT Platform 2021.9 */
 
 pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
@@ -9,7 +9,7 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract ArtifyToken is ERC20, Ownable {
+contract LFGToken is ERC20, Ownable {
     using SafeMath for uint256;
 
     address public constant DEAD_ADDRESS =

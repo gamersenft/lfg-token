@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
-//** Artify Vesting Contract */
-//** Author Alex Hong : Artify Vesting Contract 2021.8 */
+//** LFG Vesting Contract */
+//** Author Alex Hong : LFG Vesting Contract 2021.9 */
 
 pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
@@ -10,9 +10,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./interfaces/IArtifyVesting.sol";
+import "./interfaces/ILFGVesting.sol";
 
-contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
+contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -24,7 +24,7 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
     mapping(address => WhitelistInfo) public whitelistPools;
     mapping(uint256 => VestingInfo) public vestingPools;
 
-    IERC20 private _artifyToken;
+    IERC20 private _lfgToken;
 
     /**
      *
@@ -89,7 +89,7 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
      */
     function addWhitelist(
         address _wallet,
-        uint256 _artifyAmount,
+        uint256 _lfgAmount,
         uint256 _option
     ) external override onlyOwner returns (bool) {
         require(
@@ -99,7 +99,7 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
         require(vestingPools[_option].active, "Vesting option is not existing");
 
         whitelistPools[_wallet].wallet = _wallet;
-        whitelistPools[_wallet].artifyAmount = _artifyAmount;
+        whitelistPools[_wallet].lfgAmount = _lfgAmount;
         whitelistPools[_wallet].distributedAmount = 0;
         whitelistPools[_wallet].joinDate = block.timestamp;
         whitelistPools[_wallet].vestingOption = _option;
@@ -134,31 +134,31 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
 
     /**
      *
-     * @dev set artify token address for contract
+     * @dev set LFG token address for contract
      *
      * @param {_token} address of IERC20 instance
      * @return {bool} return status of token address
      *
      */
-    function setArtifyToken(IERC20 _token)
+    function setLFGToken(IERC20 _token)
         external
         override
         onlyOwner
         returns (bool)
     {
-        _artifyToken = _token;
+        _lfgToken = _token;
         return true;
     }
 
     /**
      *
-     * @dev getter function for deployed artify token address
+     * @dev getter function for deployed lfg token address
      *
-     * @return {address} return deployment address of artify token
+     * @return {address} return deployment address of lfg token
      *
      */
-    function getArtifyToken() external view override returns (address) {
-        return address(_artifyToken);
+    function getLFGToken() external view override returns (address) {
+        return address(_lfgToken);
     }
 
     /**
@@ -180,7 +180,7 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
 
         uint256 releaseAmount = calculateReleasableAmount(_wallet);
         if (releaseAmount > 0) {
-            _artifyToken.transfer(_wallet, releaseAmount);
+            _lfgToken.transfer(_wallet, releaseAmount);
             whitelistPools[_wallet].distributedAmount += releaseAmount;
         } else {
             return false;
@@ -231,11 +231,11 @@ contract ArtifyVesting is IArtifyVesting, Ownable, ReentrancyGuard {
                 vestingPools[whitelistPools[_wallet].vestingOption].duration
             )
         ) {
-            return whitelistPools[_wallet].artifyAmount;
+            return whitelistPools[_wallet].lfgAmount;
         } else {
             return
                 whitelistPools[_wallet]
-                    .artifyAmount
+                    .lfgAmount
                     .mul(
                         now.sub(
                             vestingPools[whitelistPools[_wallet].vestingOption]
