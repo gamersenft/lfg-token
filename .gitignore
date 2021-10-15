@@ -2,3 +2,8 @@ node_modules/
 package-lock.json
 build/
 .env
+yarn.lock
+yarn-error.log
+artifacts
+cache
+types

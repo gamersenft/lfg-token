@@ -44,11 +44,8 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
         uint256 _start,
         uint256 _duration
     ) external override onlyOwner returns (bool) {
-        require(_strategy > 0, "Strategy should be correct");
-        require(
-            !vestingPools[_strategy].active,
-            "Vesting option already exist"
-        );
+        require(_strategy != 0, "Strategy should be correct");
+        require(!vestingPools[_strategy].active, "Vesting option already exist");
 
         vestingPools[_strategy].strategy = _strategy;
         vestingPools[_strategy].cliff = _start.add(_cliff);
@@ -68,11 +65,7 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
      * @return return vesting strategy
      *
      */
-    function getVestingInfo(uint256 _strategy)
-        external
-        view
-        returns (VestingInfo memory)
-    {
+    function getVestingInfo(uint256 _strategy) external view returns (VestingInfo memory) {
         require(vestingPools[_strategy].active, "Vesting option is not exist");
 
         return vestingPools[_strategy];
@@ -92,10 +85,7 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
         uint256 _lfgAmount,
         uint256 _option
     ) external override onlyOwner returns (bool) {
-        require(
-            whitelistPools[_wallet].wallet != _wallet,
-            "Whitelist already available"
-        );
+        require(whitelistPools[_wallet].wallet != _wallet, "Whitelist already available");
         require(vestingPools[_option].active, "Vesting option is not existing");
 
         whitelistPools[_wallet].wallet = _wallet;
@@ -119,15 +109,8 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
      * @return {Whitelist} return whitelist instance
      *
      */
-    function getWhitelist(address _wallet)
-        external
-        view
-        returns (WhitelistInfo memory)
-    {
-        require(
-            whitelistPools[_wallet].wallet == _wallet,
-            "Whitelist is not existing"
-        );
+    function getWhitelist(address _wallet) external view returns (WhitelistInfo memory) {
+        require(whitelistPools[_wallet].wallet == _wallet, "Whitelist is not existing");
 
         return whitelistPools[_wallet];
     }
@@ -140,12 +123,7 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
      * @return {bool} return status of token address
      *
      */
-    function setLFGToken(IERC20 _token)
-        external
-        override
-        onlyOwner
-        returns (bool)
-    {
+    function setLFGToken(IERC20 _token) external override onlyOwner returns (bool) {
         _lfgToken = _token;
         return true;
     }
@@ -170,18 +148,15 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
      * @return {bool} return status of distribution
      *
      */
-    function claimDistribution(address _wallet)
-        external
-        override
-        nonReentrant
-        returns (bool)
-    {
-        require(whitelistPools[_wallet].active, "User is not in whitelist");
+    function claimDistribution() external override nonReentrant returns (bool) {
+        require(whitelistPools[msg.sender].active, "User is not in whitelist");
 
-        uint256 releaseAmount = calculateReleasableAmount(_wallet);
+        uint256 releaseAmount = calculateReleasableAmount(msg.sender);
         if (releaseAmount > 0) {
-            _lfgToken.transfer(_wallet, releaseAmount);
-            whitelistPools[_wallet].distributedAmount += releaseAmount;
+            _lfgToken.safeTransfer(msg.sender, releaseAmount);
+            whitelistPools[msg.sender].distributedAmount = whitelistPools[msg.sender]
+                .distributedAmount
+                .add(releaseAmount);
         } else {
             return false;
         }
@@ -198,15 +173,8 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
      * @return {uint256} releasable amount of the whitelist
      *
      */
-    function calculateReleasableAmount(address _wallet)
-        public
-        view
-        returns (uint256)
-    {
-        return
-            calculateVestAmount(_wallet).sub(
-                whitelistPools[_wallet].distributedAmount
-            );
+    function calculateReleasableAmount(address _wallet) public view returns (uint256) {
+        return calculateVestAmount(_wallet).sub(whitelistPools[_wallet].distributedAmount);
     }
 
     /**
@@ -218,15 +186,11 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
      * @return {uint256} return vested amount
      *
      */
-    function calculateVestAmount(address _wallet)
-        public
-        view
-        returns (uint256)
-    {
-        if (now < vestingPools[whitelistPools[_wallet].vestingOption].cliff) {
+    function calculateVestAmount(address _wallet) public view returns (uint256) {
+        if (block.timestamp < vestingPools[whitelistPools[_wallet].vestingOption].cliff) {
             return 0;
         } else if (
-            now >=
+            block.timestamp >=
             vestingPools[whitelistPools[_wallet].vestingOption].start.add(
                 vestingPools[whitelistPools[_wallet].vestingOption].duration
             )
@@ -237,15 +201,11 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
                 whitelistPools[_wallet]
                     .lfgAmount
                     .mul(
-                        now.sub(
-                            vestingPools[whitelistPools[_wallet].vestingOption]
-                                .start
+                        block.timestamp.sub(
+                            vestingPools[whitelistPools[_wallet].vestingOption].start
                         )
                     )
-                    .div(
-                        vestingPools[whitelistPools[_wallet].vestingOption]
-                            .duration
-                    );
+                    .div(vestingPools[whitelistPools[_wallet].vestingOption].duration);
         }
     }
 

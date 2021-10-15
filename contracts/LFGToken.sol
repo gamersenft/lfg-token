@@ -12,8 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract LFGToken is ERC20, Ownable {
     using SafeMath for uint256;
 
-    address public constant DEAD_ADDRESS =
-        0x000000000000000000000000000000000000dEaD;
+    address public constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
 
     /**
      *
