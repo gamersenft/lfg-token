@@ -76,5 +76,5 @@ interface ILFGVesting {
 
     function getLFGToken() external view returns (address);
 
-    function claimDistribution(address _wallet) external returns (bool);
+    function claimDistribution() external returns (bool);
 }
