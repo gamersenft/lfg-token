@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "hardhat test",
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "deploy-token:network": "hardhat run deploy/1_lfg_token.ts --network",
+    "deploy-vesting:network": "hardhat run deploy/2_lfg_vesting.ts --network",
+    "verify:network": "hardhat verify --network"
   },
   "repository": {
     "type": "git",

@@ -9,7 +9,9 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract LFGToken is ERC20, Ownable {
+import "./LGEWhitelisted.sol";
+
+contract LFGToken is ERC20, Ownable, LGEWhitelisted {
     using SafeMath for uint256;
 
     address public constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
@@ -35,6 +37,14 @@ contract LFGToken is ERC20, Ownable {
     function lockTokens(uint256 amount) external onlyOwner returns (bool) {
         _transfer(_msgSender(), DEAD_ADDRESS, amount);
         return true;
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override {
+        _applyLGEWhitelist(from, to, amount);
     }
 
     /**
