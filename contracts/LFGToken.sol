@@ -9,12 +9,22 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import "./LGEWhitelisted.sol";
+abstract contract BPContract {
+    function protect(
+        address sender,
+        address receiver,
+        uint256 amount
+    ) external virtual;
+}
 
-contract LFGToken is ERC20, Ownable, LGEWhitelisted {
+contract LFGToken is ERC20, Ownable {
     using SafeMath for uint256;
 
     address public constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
+
+    BPContract public BP;
+    bool public bpEnabled;
+    bool public BPDisabledForever = false;
 
     /**
      *
@@ -39,12 +49,28 @@ contract LFGToken is ERC20, Ownable, LGEWhitelisted {
         return true;
     }
 
+    function setBPAddrss(address _bp) external onlyOwner {
+        require(address(BP) == address(0), "Can only be initialized once");
+        BP = BPContract(_bp);
+    }
+
+    function setBpEnabled(bool _enabled) external onlyOwner {
+        bpEnabled = _enabled;
+    }
+
+    function setBotProtectionDisableForever() external onlyOwner {
+        require(BPDisabledForever == false);
+        BPDisabledForever = true;
+    }
+
     function _beforeTokenTransfer(
         address from,
         address to,
         uint256 amount
     ) internal override {
-        _applyLGEWhitelist(from, to, amount);
+        if (bpEnabled && !BPDisabledForever) {
+            BP.protect(from, to, amount);
+        }
     }
 
     /**
