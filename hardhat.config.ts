@@ -40,6 +40,14 @@ const config = {
       accounts: [process.env.MAINNET_PRIVKEY],
       gasPrice: 8000000000,
     },
+    bsctest: {
+      accounts: [process.env.MUMBAI_PRIVKEY || ""],
+      chainId: 97,
+      url: "https://data-seed-prebsc-1-s1.binance.org:8545",
+      timeout: 99999,
+      gasPrice: 20e9,
+      gas: 35e5,
+    },
   },
   etherscan: {
     apiKey: process.env.POLYSCAN_API,
