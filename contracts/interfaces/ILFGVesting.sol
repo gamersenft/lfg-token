@@ -50,6 +50,7 @@ interface ILFGVesting {
         uint256 distributedAmount;
         uint256 joinDate;
         uint256 vestingOption;
+        uint256 initUnlocked;
         bool active;
     }
 
@@ -66,10 +67,11 @@ interface ILFGVesting {
         uint256 _duration
     ) external returns (bool);
 
-    function addWhitelist(
-        address _wallet,
-        uint256 _lfgAmount,
-        uint256 _option
+    function addWhitelists(
+        address[] calldata _wallet,
+        uint256[] calldata _lfgAmount,
+        uint256[] calldata _option,
+        uint256[] calldata _initAmount
     ) external returns (bool);
 
     function setLFGToken(IERC20 _token) external returns (bool);

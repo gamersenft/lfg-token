@@ -48,7 +48,7 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
         require(!vestingPools[_strategy].active, "Vesting option already exist");
 
         vestingPools[_strategy].strategy = _strategy;
-        vestingPools[_strategy].cliff = _start.add(_cliff);
+        vestingPools[_strategy].cliff = _start.add(_cliff * 1 days);
         vestingPools[_strategy].start = _start;
         vestingPools[_strategy].duration = _duration;
         vestingPools[_strategy].active = true;
@@ -80,22 +80,34 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
      * @return {bool} return status of the whitelist
      *
      */
-    function addWhitelist(
-        address _wallet,
-        uint256 _lfgAmount,
-        uint256 _option
+    function addWhitelists(
+        address[] calldata _wallet,
+        uint256[] calldata _lfgAmount,
+        uint256[] calldata _option,
+        uint256[] calldata _initUnlocked
     ) external override onlyOwner returns (bool) {
-        require(whitelistPools[_wallet].wallet != _wallet, "Whitelist already available");
-        require(vestingPools[_option].active, "Vesting option is not existing");
+        require(_wallet.length == _lfgAmount.length, "Invalid array length");
+        require(_option.length == _lfgAmount.length, "Invalid array length");
 
-        whitelistPools[_wallet].wallet = _wallet;
-        whitelistPools[_wallet].lfgAmount = _lfgAmount;
-        whitelistPools[_wallet].distributedAmount = 0;
-        whitelistPools[_wallet].joinDate = block.timestamp;
-        whitelistPools[_wallet].vestingOption = _option;
-        whitelistPools[_wallet].active = true;
+        for (uint256 i = 0; i < _wallet.length; i++) {
+            require(whitelistPools[_wallet[i]].wallet != _wallet[i], "Whitelist already available");
+            require(vestingPools[_option[i]].active, "Vesting option is not existing");
+            require(_initUnlocked[i] <= _lfgAmount[i], "Invalid init amount");
 
-        emit AddWhitelist(_wallet);
+            whitelistPools[_wallet[i]].wallet = _wallet[i];
+            whitelistPools[_wallet[i]].lfgAmount = _lfgAmount[i].sub(_initUnlocked[i]);
+            whitelistPools[_wallet[i]].distributedAmount = 0;
+            whitelistPools[_wallet[i]].joinDate = block.timestamp;
+            whitelistPools[_wallet[i]].vestingOption = _option[i];
+            whitelistPools[_wallet[i]].active = true;
+            whitelistPools[_wallet[i]].initUnlocked = _initUnlocked[i];
+
+            if (_initUnlocked[i] != 0) {
+                _lfgToken.safeTransfer(_wallet[i], _initUnlocked[i]);
+            }
+
+            emit AddWhitelist(_wallet[i]);
+        }
 
         return true;
     }
@@ -192,7 +204,7 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
         } else if (
             block.timestamp >=
             vestingPools[whitelistPools[_wallet].vestingOption].start.add(
-                vestingPools[whitelistPools[_wallet].vestingOption].duration
+                vestingPools[whitelistPools[_wallet].vestingOption].duration * 1 days
             )
         ) {
             return whitelistPools[_wallet].lfgAmount;
@@ -205,7 +217,7 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
                             vestingPools[whitelistPools[_wallet].vestingOption].start
                         )
                     )
-                    .div(vestingPools[whitelistPools[_wallet].vestingOption].duration);
+                    .div(vestingPools[whitelistPools[_wallet].vestingOption].duration * 1 days);
         }
     }
 
