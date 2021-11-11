@@ -9,6 +9,7 @@
     "deploy-token:network": "hardhat run deploy/1_lfg_token.ts --network",
     "deploy-vesting:network": "hardhat run deploy/2_lfg_vesting.ts --network",
     "deploy-locker:network": "hardhat run deploy/3_lfg_lpLocker.ts --network",
+    "deploy-staking:network": "hardhat run deploy/4_lfg_staking.ts --network",
     "verify:network": "hardhat verify --network"
   },
   "repository": {

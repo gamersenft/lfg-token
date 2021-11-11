@@ -256,7 +256,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
         external
         onlyOwner
     {
-        require(block.number < startBlock, "Pool has started");
+        require(startBlock < _startBlock, "New startBlock must be bigger than previous one");
         require(_startBlock < _bonusEndBlock, "New startBlock must be lower than new endBlock");
         require(block.number < _startBlock, "New startBlock must be higher than current block");
 
