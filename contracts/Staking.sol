@@ -38,12 +38,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
     // The staked token
     IBEP20 public stakedToken;
 
-    // The withdrawal interval
-    uint256 public withdrawalInterval;
-
-    // Max withdrawal interval: 30 days.
-    uint256 public constant MAXIMUM_WITHDRAWAL_INTERVAL = 30 days;
-
     // Max penalty fee: 50%
     uint256 public constant MAXIMUM_PENALTY_FEE = 5000;
 
@@ -68,7 +62,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
     struct UserInfo {
         uint256 amount; // How many staked tokens the user has provided
         uint256 rewardDebt; // Reward debt
-        uint256 nextWithdrawalUntil; // When can the user withdraw again.
         uint256 penaltyUntil; //When can the user withdraw without penalty
     }
 
@@ -79,7 +72,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
     event NewRewardPerBlock(uint256 rewardPerBlock);
     event RewardsStop(uint256 blockNumber);
     event Withdraw(address indexed user, uint256 amount);
-    event NewWithdrawalInterval(uint256 interval);
     event NewPenaltyFee(uint256 fee);
     event NewPenaltyDuration(uint256 fee);
 
@@ -87,14 +79,13 @@ contract GamersePool is Ownable, ReentrancyGuard {
         IBEP20 _stakedToken,
         IBEP20 _rewardToken,
         address _rewardHolder,
+        address _custodyAddress,
         uint256 _rewardPerBlock,
         uint256 _startBlock,
         uint256 _bonusEndBlock,
-        uint256 _withdrawalInterval,
         uint256 _penaltyFee,
         uint256 _penaltyDuration
     ) public {
-        require(_withdrawalInterval <= MAXIMUM_WITHDRAWAL_INTERVAL, "Invalid withdrawal interval");
         require(_penaltyFee <= MAXIMUM_PENALTY_FEE, "Invalid penalty fee");
         require(_penaltyDuration <= MAXIMUM_PENALTY_DURATION, "Invalid penalty duration");
 
@@ -103,10 +94,10 @@ contract GamersePool is Ownable, ReentrancyGuard {
         rewardPerBlock = _rewardPerBlock;
         startBlock = _startBlock;
         bonusEndBlock = _bonusEndBlock;
-        withdrawalInterval = _withdrawalInterval;
         penaltyFee = _penaltyFee;
         penaltyDuration = _penaltyDuration;
         rewardHolder = _rewardHolder;
+        custodyAddress = _custodyAddress;
 
         uint256 decimalsRewardToken = uint256(rewardToken.decimals());
         require(decimalsRewardToken < 30, "Must be inferior to 30");
@@ -126,22 +117,11 @@ contract GamersePool is Ownable, ReentrancyGuard {
 
         _updatePool();
 
-        if (user.amount != 0) {
-            uint256 pending = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR).sub(
-                user.rewardDebt
-            );
-            if (pending != 0) {
-                rewardToken.safeTransferFrom(rewardHolder, address(msg.sender), pending);
-                user.nextWithdrawalUntil = block.timestamp.add(withdrawalInterval);
-            }
-        }
-
         if (_amount != 0) {
             stakedToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             user.amount = user.amount.add(_amount);
 
-            if (user.nextWithdrawalUntil == 0) {
-                user.nextWithdrawalUntil = block.timestamp.add(withdrawalInterval);
+            if (user.penaltyUntil == 0) {
                 user.penaltyUntil = block.timestamp.add(penaltyDuration);
             }
         }
@@ -158,7 +138,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
     function withdraw(uint256 _amount) external nonReentrant {
         UserInfo storage user = userInfo[msg.sender];
         require(user.amount >= _amount, "Amount to withdraw too high");
-        require(user.nextWithdrawalUntil <= block.timestamp, "Withdrawal locked");
 
         _updatePool();
 
@@ -183,7 +162,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
             } else {
                 rewardToken.safeTransferFrom(rewardHolder, address(msg.sender), pending);
             }
-            user.nextWithdrawalUntil = block.timestamp.add(withdrawalInterval);
         }
 
         user.rewardDebt = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR);
@@ -197,19 +175,16 @@ contract GamersePool is Ownable, ReentrancyGuard {
      */
     function emergencyWithdraw() external nonReentrant {
         UserInfo storage user = userInfo[msg.sender];
-        require(user.nextWithdrawalUntil <= block.timestamp, "Withdrawal locked");
 
         uint256 amountToTransfer = user.amount;
         user.amount = 0;
         user.rewardDebt = 0;
-        user.nextWithdrawalUntil = 0;
         user.penaltyUntil = 0;
 
         if (amountToTransfer != 0) {
             stakedToken.safeTransfer(address(msg.sender), amountToTransfer);
+            emit EmergencyWithdraw(msg.sender, amountToTransfer);
         }
-
-        emit EmergencyWithdraw(msg.sender, user.amount);
     }
 
     /**
@@ -270,17 +245,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
     }
 
     /*
-     * @notice Update the withdrawal interval
-     * @dev Only callable by owner.
-     * @param _interval: the withdrawal interval for staked token in seconds
-     */
-    function updateWithdrawalInterval(uint256 _interval) external onlyOwner {
-        require(_interval <= MAXIMUM_WITHDRAWAL_INTERVAL, "Invalid withdrawal interval");
-        withdrawalInterval = _interval;
-        emit NewWithdrawalInterval(_interval);
-    }
-
-    /*
      * @notice Update the penalty fee
      * @dev Only callable by owner.
      * @param _fee: the penalty fee
@@ -331,12 +295,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
         } else {
             return user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR).sub(user.rewardDebt);
         }
-    }
-
-    // View function to see if user can withdraw staked token.
-    function canWithdraw(address _user) external view returns (bool) {
-        UserInfo storage user = userInfo[_user];
-        return block.timestamp >= user.nextWithdrawalUntil;
     }
 
     /*
