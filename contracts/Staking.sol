@@ -11,9 +11,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
-    // Whether a limit is set for users
-    bool public hasUserLimit;
-
     // Accrued token per share
     uint256 public accTokenPerShare;
 
@@ -88,6 +85,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
     ) public {
         require(_penaltyFee <= MAXIMUM_PENALTY_FEE, "Invalid penalty fee");
         require(_penaltyDuration <= MAXIMUM_PENALTY_DURATION, "Invalid penalty duration");
+        require(_custodyAddress != address(0), "Invalid custody address");
 
         stakedToken = _stakedToken;
         rewardToken = _rewardToken;
@@ -125,8 +123,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
                 user.penaltyUntil = block.timestamp.add(penaltyDuration);
             }
         }
-
-        user.rewardDebt = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR);
 
         emit Deposit(msg.sender, _amount);
     }
@@ -217,6 +213,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
      */
     function updateRewardPerBlock(uint256 _rewardPerBlock) external onlyOwner {
         require(block.number < startBlock, "Pool has started");
+
+        _updatePool();
+
         rewardPerBlock = _rewardPerBlock;
         emit NewRewardPerBlock(_rewardPerBlock);
     }
@@ -234,6 +233,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
         require(startBlock < _startBlock, "New startBlock must be bigger than previous one");
         require(_startBlock < _bonusEndBlock, "New startBlock must be lower than new endBlock");
         require(block.number < _startBlock, "New startBlock must be higher than current block");
+
+        _updatePool();
 
         startBlock = _startBlock;
         bonusEndBlock = _bonusEndBlock;
