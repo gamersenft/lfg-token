@@ -60,6 +60,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
         uint256 amount; // How many staked tokens the user has provided
         uint256 rewardDebt; // Reward debt
         uint256 penaltyUntil; //When can the user withdraw without penalty
+        uint256 lastDeposit; // When user deposit last time
     }
 
     event AdminTokenRecovery(address tokenRecovered, uint256 amount);
@@ -118,11 +119,14 @@ contract GamersePool is Ownable, ReentrancyGuard {
         if (_amount != 0) {
             stakedToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             user.amount = user.amount.add(_amount);
+            user.lastDeposit = block.timestamp;
 
             if (user.penaltyUntil == 0) {
                 user.penaltyUntil = block.timestamp.add(penaltyDuration);
             }
         }
+
+        user.rewardDebt = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR);
 
         emit Deposit(msg.sender, _amount);
     }
