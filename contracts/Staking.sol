@@ -59,6 +59,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
     struct UserInfo {
         uint256 amount; // How many staked tokens the user has provided
         uint256 rewardDebt; // Reward debt
+        uint256 rewardDeposit; // Reward from deposits
         uint256 penaltyUntil; //When can the user withdraw without penalty
         uint256 lastDeposit; // When user deposit last time
     }
@@ -116,6 +117,14 @@ contract GamersePool is Ownable, ReentrancyGuard {
 
         _updatePool();
 
+        uint256 pending = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR).sub(
+            user.rewardDebt
+        );
+
+        if (pending != 0) {
+            user.rewardDeposit = user.rewardDeposit.add(pending);
+        }
+
         if (_amount != 0) {
             stakedToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             user.amount = user.amount.add(_amount);
@@ -141,9 +150,12 @@ contract GamersePool is Ownable, ReentrancyGuard {
 
         _updatePool();
 
-        uint256 pending = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR).sub(
-            user.rewardDebt
-        );
+        uint256 pending = user
+            .amount
+            .mul(accTokenPerShare)
+            .div(PRECISION_FACTOR)
+            .sub(user.rewardDebt)
+            .add(user.rewardDeposit);
 
         if (_amount != 0) {
             user.amount = user.amount.sub(_amount);
@@ -180,6 +192,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
         user.amount = 0;
         user.rewardDebt = 0;
         user.penaltyUntil = 0;
+        user.lastDeposit = 0;
+        user.rewardDeposit = 0;
 
         if (amountToTransfer != 0) {
             stakedToken.safeTransfer(address(msg.sender), amountToTransfer);
@@ -296,9 +310,17 @@ contract GamersePool is Ownable, ReentrancyGuard {
                 cakeReward.mul(PRECISION_FACTOR).div(stakedTokenSupply)
             );
             return
-                user.amount.mul(adjustedTokenPerShare).div(PRECISION_FACTOR).sub(user.rewardDebt);
+                user
+                    .amount
+                    .mul(adjustedTokenPerShare)
+                    .div(PRECISION_FACTOR)
+                    .sub(user.rewardDebt)
+                    .add(user.rewardDeposit);
         } else {
-            return user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR).sub(user.rewardDebt);
+            return
+                user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR).sub(user.rewardDebt).add(
+                    user.rewardDeposit
+                );
         }
     }
 
