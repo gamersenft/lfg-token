@@ -174,6 +174,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
             } else {
                 rewardToken.safeTransferFrom(rewardHolder, address(msg.sender), pending);
             }
+            user.rewardDeposit = 0;
         }
 
         user.rewardDebt = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR);
