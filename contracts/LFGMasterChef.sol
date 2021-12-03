@@ -73,6 +73,8 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Total locked up rewards
     uint256 public totalLockedUpRewards;
 
+    mapping (IERC20 => bool) public checkAdd;
+
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event Compound(address indexed user, uint256 indexed pid, uint256 amount);
@@ -123,6 +125,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _harvestInterval,
         bool _withUpdate
     ) public onlyOwner {
+        require(checkAdd[_lpToken] == false ,"You only add once");
         require(_depositFeeBP <= 500, "add: invalid deposit fee basis points");
         require(
             _harvestInterval <= MAXIMUM_HARVEST_INTERVAL,
@@ -145,6 +148,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                 harvestInterval: _harvestInterval
             })
         );
+        checkAdd[_lpToken] = true;
     }
 
     // Update the given pool's LFGs allocation point and deposit fee. Can only be called by the owner.
