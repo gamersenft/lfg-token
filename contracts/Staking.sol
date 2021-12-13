@@ -41,6 +41,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
     // Max penalty duration: 14 days
     uint256 public constant MAXIMUM_PENALTY_DURATION = 14 days;
 
+    // Max airdrop staking duration
+    uint256 public constant MAXIMUM_AIRDROP_DURATION = 85 days;
+
     // Penalty Fee
     uint256 public penaltyFee;
 
@@ -53,6 +56,12 @@ contract GamersePool is Ownable, ReentrancyGuard {
     // custody address
     address public custodyAddress;
 
+    // airdrop NFT minimum staking amount
+    uint256 public adMinStakeAmount;
+
+    // duration in blocks needed for airdrop
+    uint256 public adDuration;
+
     // Info of each user that stakes tokens (stakedToken)
     mapping(address => UserInfo) public userInfo;
 
@@ -62,6 +71,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
         uint256 rewardDeposit; // Reward from deposits
         uint256 penaltyUntil; //When can the user withdraw without penalty
         uint256 lastDeposit; // When user deposit last time
+        uint256 adStartBlock; // When user started to take part in airdrop by staking adMinStakeAmount
     }
 
     event AdminTokenRecovery(address tokenRecovered, uint256 amount);
@@ -83,11 +93,14 @@ contract GamersePool is Ownable, ReentrancyGuard {
         uint256 _startBlock,
         uint256 _bonusEndBlock,
         uint256 _penaltyFee,
-        uint256 _penaltyDuration
+        uint256 _penaltyDuration,
+        uint256 _adMinStakeAmount,
+        uint256 _adDuration
     ) public {
         require(_penaltyFee <= MAXIMUM_PENALTY_FEE, "Invalid penalty fee");
         require(_penaltyDuration <= MAXIMUM_PENALTY_DURATION, "Invalid penalty duration");
         require(_custodyAddress != address(0), "Invalid custody address");
+        require(_adDuration <= MAXIMUM_AIRDROP_DURATION, "Invalid airdrop duration");
 
         stakedToken = _stakedToken;
         rewardToken = _rewardToken;
@@ -98,6 +111,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
         penaltyDuration = _penaltyDuration;
         rewardHolder = _rewardHolder;
         custodyAddress = _custodyAddress;
+        adMinStakeAmount = _adMinStakeAmount;
+        adDuration = _adDuration;
 
         uint256 decimalsRewardToken = uint256(rewardToken.decimals());
         require(decimalsRewardToken < 30, "Must be inferior to 30");
@@ -134,6 +149,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
                 user.penaltyUntil = block.timestamp.add(penaltyDuration);
             }
         }
+
+        _updateAirdrop();
 
         user.rewardDebt = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR);
 
@@ -177,6 +194,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
             user.rewardDeposit = 0;
         }
 
+        _updateAirdrop();
+
         user.rewardDebt = user.amount.mul(accTokenPerShare).div(PRECISION_FACTOR);
 
         emit Withdraw(msg.sender, _amount);
@@ -195,6 +214,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
         user.penaltyUntil = 0;
         user.lastDeposit = 0;
         user.rewardDeposit = 0;
+        user.adStartBlock = 0;
 
         if (amountToTransfer != 0) {
             stakedToken.safeTransfer(address(msg.sender), amountToTransfer);
@@ -346,6 +366,30 @@ contract GamersePool is Ownable, ReentrancyGuard {
             cakeReward.mul(PRECISION_FACTOR).div(stakedTokenSupply)
         );
         lastRewardBlock = block.number;
+    }
+
+    /*
+     * @notice Update user's airdrop information
+     */
+    function _updateAirdrop() internal {
+        if (bonusEndBlock < block.number) {
+            return;
+        }
+
+        UserInfo storage user = userInfo[msg.sender];
+
+        if (user.amount < adMinStakeAmount) {
+            user.adStartBlock = 0;
+            return;
+        }
+
+        if (
+            user.amount >= adMinStakeAmount &&
+            user.adStartBlock == 0 &&
+            block.number.add(adDuration) <= bonusEndBlock
+        ) {
+            user.adStartBlock = block.number;
+        }
     }
 
     /*
