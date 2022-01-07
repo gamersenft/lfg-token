@@ -39,7 +39,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
     uint256 public constant MAXIMUM_PENALTY_FEE = 5000;
 
     // Max penalty duration: 14 days
-    uint256 public constant MAXIMUM_PENALTY_DURATION = 14 days;
+    uint256 public constant MAXIMUM_PENALTY_DURATION = 30 days;
 
     // Max airdrop staking duration
     uint256 public constant MAXIMUM_AIRDROP_DURATION = 85 days;
@@ -235,28 +235,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
         IBEP20(_tokenAddress).safeTransfer(address(msg.sender), _tokenAmount);
 
         emit AdminTokenRecovery(_tokenAddress, _tokenAmount);
-    }
-
-    /*
-     * @notice Stop rewards
-     * @dev Only callable by owner
-     */
-    function stopReward() external onlyOwner {
-        bonusEndBlock = block.number;
-    }
-
-    /*
-     * @notice Update reward per block
-     * @dev Only callable by owner.
-     * @param _rewardPerBlock: the reward per block
-     */
-    function updateRewardPerBlock(uint256 _rewardPerBlock) external onlyOwner {
-        require(block.number < startBlock, "Pool has started");
-
-        _updatePool();
-
-        rewardPerBlock = _rewardPerBlock;
-        emit NewRewardPerBlock(_rewardPerBlock);
     }
 
     /**
