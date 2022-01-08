@@ -44,6 +44,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
     // Max airdrop staking duration
     uint256 public constant MAXIMUM_AIRDROP_DURATION = 85 days;
 
+    // Default max staking amount per account
+    uint256 public constant DEFAULT_MAX_STAKING_AMOUNT = 500000000000000000000000;
+
     // Penalty Fee
     uint256 public penaltyFee;
 
@@ -61,6 +64,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
 
     // duration in blocks needed for airdrop
     uint256 public adDuration;
+
+    // maximum staking amount per user
+    uint256 public maxStakeAmount;
 
     // Info of each user that stakes tokens (stakedToken)
     mapping(address => UserInfo) public userInfo;
@@ -113,6 +119,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
         custodyAddress = _custodyAddress;
         adMinStakeAmount = _adMinStakeAmount;
         adDuration = _adDuration;
+        maxStakeAmount = DEFAULT_MAX_STAKING_AMOUNT;
 
         uint256 decimalsRewardToken = uint256(rewardToken.decimals());
         require(decimalsRewardToken < 30, "Must be inferior to 30");
@@ -129,6 +136,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
      */
     function deposit(uint256 _amount) external nonReentrant {
         UserInfo storage user = userInfo[msg.sender];
+        require(user.amount + _amount <= maxStakeAmount, "Total amount exceeds max staking amount per user");
 
         _updatePool();
 
@@ -383,5 +391,14 @@ contract GamersePool is Ownable, ReentrancyGuard {
         } else {
             return bonusEndBlock.sub(_from);
         }
+    }
+
+    /*
+     * @notice Update the maximum staking amount per user
+     * @dev Only callable by owner.
+     * @param amount: the new maximum staking amount per user
+     */
+    function updateMaxStakeAmount(uint256 amount) external onlyOwner {
+        maxStakeAmount = amount;
     }
 }
