@@ -68,6 +68,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
     // maximum staking amount per user
     uint256 public maxStakeAmount;
 
+    // Total staked amount of all user
+    uint256 public totalStakedAmount;
+
     // Info of each user that stakes tokens (stakedToken)
     mapping(address => UserInfo) public userInfo;
 
@@ -152,6 +155,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
             stakedToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             user.amount = user.amount.add(_amount);
             user.lastDeposit = block.timestamp;
+            totalStakedAmount = totalStakedAmount.add(_amount);
 
             if (user.penaltyUntil == 0) {
                 user.penaltyUntil = block.timestamp.add(penaltyDuration);
@@ -185,6 +189,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
         if (_amount != 0) {
             user.amount = user.amount.sub(_amount);
             stakedToken.safeTransfer(address(msg.sender), _amount);
+            totalStakedAmount = totalStakedAmount.sub(_amount);
         }
 
         if (pending != 0) {
@@ -309,12 +314,11 @@ contract GamersePool is Ownable, ReentrancyGuard {
      */
     function pendingReward(address _user) external view returns (uint256) {
         UserInfo storage user = userInfo[_user];
-        uint256 stakedTokenSupply = stakedToken.balanceOf(address(this));
-        if (block.number > lastRewardBlock && stakedTokenSupply != 0) {
+        if (block.number > lastRewardBlock && totalStakedAmount != 0) {
             uint256 multiplier = _getMultiplier(lastRewardBlock, block.number);
             uint256 cakeReward = multiplier.mul(rewardPerBlock);
             uint256 adjustedTokenPerShare = accTokenPerShare.add(
-                cakeReward.mul(PRECISION_FACTOR).div(stakedTokenSupply)
+                cakeReward.mul(PRECISION_FACTOR).div(totalStakedAmount)
             );
             return
                 user
@@ -339,9 +343,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
             return;
         }
 
-        uint256 stakedTokenSupply = stakedToken.balanceOf(address(this));
-
-        if (stakedTokenSupply == 0) {
+        if (totalStakedAmount == 0) {
             lastRewardBlock = block.number;
             return;
         }
@@ -349,7 +351,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
         uint256 multiplier = _getMultiplier(lastRewardBlock, block.number);
         uint256 cakeReward = multiplier.mul(rewardPerBlock);
         accTokenPerShare = accTokenPerShare.add(
-            cakeReward.mul(PRECISION_FACTOR).div(stakedTokenSupply)
+            cakeReward.mul(PRECISION_FACTOR).div(totalStakedAmount)
         );
         lastRewardBlock = block.number;
     }

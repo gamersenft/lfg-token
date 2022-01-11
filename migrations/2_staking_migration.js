@@ -20,12 +20,12 @@ module.exports = async function (deployer, network, accounts) {
     accounts[8], //"0x3ca3822163D049364E67bE19a0D3B2F03B7e99b5", // _rewardHolder
     accounts[9], //"0xf197c5bC13383ef49511303065d39b33DC063f72", // _custodyAddress
     "3088564589600000000",                         // _rewardPerBlock
-    15688033,                                    // _startBlock
-    18278233,                                    // _bonusEndBlock
-    5000,                                        // _penaltyFee
-    2592000,                                     // _penaltyDuration
+    50,                                            // _startBlock
+    5000,                                          // _bonusEndBlock
+    5000,                                          // _penaltyFee
+    2592000,                                       // _penaltyDuration
     "10000000000000000000000",                     // _adMinStakeAmount
-    3600 * 24 * 80                               // _adDuration
+    3600 * 24 * 80                                 // _adDuration
   );
 
   // // /** get instance of deployed LFGVesting contract */
