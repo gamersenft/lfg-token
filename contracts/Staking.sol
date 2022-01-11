@@ -42,7 +42,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
     uint256 public constant MAXIMUM_PENALTY_DURATION = 30 days;
 
     // Max airdrop staking duration
-    uint256 public constant MAXIMUM_AIRDROP_DURATION = 85 days;
+    uint256 public constant MAXIMUM_AIRDROP_DURATION = 85 * 28780;
 
     // Default max staking amount per account
     uint256 public constant DEFAULT_MAX_STAKING_AMOUNT = 500000000000000000000000;
@@ -92,6 +92,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
     event Withdraw(address indexed user, uint256 amount);
     event NewPenaltyFee(uint256 fee);
     event NewPenaltyDuration(uint256 fee);
+    event RewardClaimed(address indexed account, uint256 amount);
+    event RewardPenalized(address indexed account, uint256 amount);
 
     constructor(
         IBEP20 _stakedToken,
@@ -139,7 +141,10 @@ contract GamersePool is Ownable, ReentrancyGuard {
      */
     function deposit(uint256 _amount) external nonReentrant {
         UserInfo storage user = userInfo[msg.sender];
-        require(user.amount.add(_amount) <= maxStakeAmount, "Total amount exceeds max staking amount per user");
+        require(
+            user.amount.add(_amount) <= maxStakeAmount,
+            "Total amount exceeds max staking amount per user"
+        );
 
         _updatePool();
 
@@ -196,13 +201,17 @@ contract GamersePool is Ownable, ReentrancyGuard {
             if (block.timestamp < user.penaltyUntil) {
                 uint256 penaltyAmount = pending.mul(penaltyFee).div(10000);
                 rewardToken.safeTransferFrom(rewardHolder, custodyAddress, penaltyAmount);
+                emit RewardPenalized(msg.sender, penaltyAmount);
+
                 rewardToken.safeTransferFrom(
                     rewardHolder,
                     address(msg.sender),
                     pending.sub(penaltyAmount)
                 );
+                emit RewardClaimed(msg.sender, pending.sub(penaltyAmount));
             } else {
                 rewardToken.safeTransferFrom(rewardHolder, address(msg.sender), pending);
+                emit RewardClaimed(msg.sender, pending);
             }
             user.rewardDeposit = 0;
         }
