@@ -250,6 +250,28 @@ contract GamersePool is Ownable, ReentrancyGuard {
         emit AdminTokenRecovery(_tokenAddress, _tokenAmount);
     }
 
+    /*
+     * @notice Stop rewards
+     * @dev Only callable by owner
+     */
+    function stopReward() external onlyOwner {
+        bonusEndBlock = block.number;
+    }
+
+    /*
+     * @notice Update reward per block
+     * @dev Only callable by owner.
+     * @param _rewardPerBlock: the reward per block
+     */
+    function updateRewardPerBlock(uint256 _rewardPerBlock) external onlyOwner {
+        require(block.number < startBlock, "Pool has started");
+
+        _updatePool();
+
+        rewardPerBlock = _rewardPerBlock;
+        emit NewRewardPerBlock(_rewardPerBlock);
+    }
+
     /**
      * @notice It allows the admin to update start and end blocks
      * @dev This function is only callable by owner.
