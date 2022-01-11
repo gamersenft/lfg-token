@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.12;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -139,7 +139,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
      */
     function deposit(uint256 _amount) external nonReentrant {
         UserInfo storage user = userInfo[msg.sender];
-        require(user.amount + _amount <= maxStakeAmount, "Total amount exceeds max staking amount per user");
+        require(user.amount.add(_amount) <= maxStakeAmount, "Total amount exceeds max staking amount per user");
 
         _updatePool();
 
@@ -232,6 +232,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
         if (amountToTransfer != 0) {
             stakedToken.safeTransfer(address(msg.sender), amountToTransfer);
             emit EmergencyWithdraw(msg.sender, amountToTransfer);
+            totalStakedAmount = totalStakedAmount.sub(amountToTransfer);
         }
     }
 
