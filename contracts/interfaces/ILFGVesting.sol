@@ -3,7 +3,7 @@
 //** LFG Vesting Factory Contract */
 //** Author Alex Hong : LFG Platform 2021.9 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";

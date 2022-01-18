@@ -3,7 +3,7 @@
 //** LFG Vesting Contract */
 //** Author Alex Hong : LFG Vesting Contract 2021.9 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.12;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
