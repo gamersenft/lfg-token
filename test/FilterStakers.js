@@ -19,7 +19,7 @@ let stakersMap = new Map();
 stakingInst.getPastEvents('Deposit', {
    fromBlock: 14300586,
    toBlock: 14304850
-}, function (error, events) { 
+}, function (error, events) {
    console.log("Length ", events.length);
    for(let i = 0; i < events.length; ++i) {
    const event = events[i];
