@@ -26,7 +26,7 @@ stakingInst.getPastEvents('Deposit', {
    const user = event["returnValues"]["user"];
    const block = event["blockNumber"];
    if (!stakersMap.has(user)) {
-      console.log("User ", user, " start block ", block );
+      console.log("User,",user,",start_block,",block);
       stakersMap.set(user, block);
    }
 } });
