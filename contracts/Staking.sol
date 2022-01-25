@@ -106,7 +106,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
         uint256 _penaltyFee,
         uint256 _penaltyDuration,
         uint256 _adMinStakeAmount,
-        uint256 _adDuration
+        uint256 _adDuration,
+        address owner
     ) public {
         require(_penaltyFee <= MAXIMUM_PENALTY_FEE, "Invalid penalty fee");
         require(_penaltyDuration <= MAXIMUM_PENALTY_DURATION, "Invalid penalty duration");
@@ -133,6 +134,7 @@ contract GamersePool is Ownable, ReentrancyGuard {
 
         // Set the lastRewardBlock as the startBlock
         lastRewardBlock = startBlock;
+        transferOwnership(owner);
     }
 
     /*

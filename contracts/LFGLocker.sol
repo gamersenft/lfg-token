@@ -21,11 +21,13 @@ contract TokenLock is Ownable {
     constructor(
         IERC20 token,
         address beneficiary,
-        uint256 releaseTime
+        uint256 releaseTime,
+        address owner
     ) public {
         _token = token;
         _beneficiary = beneficiary;
         _releaseTime = releaseTime;
+        transferOwnership(owner);
     }
 
     /**

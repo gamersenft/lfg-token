@@ -26,6 +26,9 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
 
     IERC20 private _lfgToken;
 
+    constructor (address owner) public {
+        transferOwnership(owner);
+    }
     /**
      *
      * @dev setup vesting plans for investors
@@ -88,6 +91,7 @@ contract LFGVesting is ILFGVesting, Ownable, ReentrancyGuard {
     ) external override onlyOwner returns (bool) {
         require(_wallet.length == _lfgAmount.length, "Invalid array length");
         require(_option.length == _lfgAmount.length, "Invalid array length");
+        require(_initUnlocked.length == _lfgAmount.length, "Invalid array length");
 
         for (uint256 i = 0; i < _wallet.length; i++) {
             require(whitelistPools[_wallet[i]].wallet != _wallet[i], "Whitelist already available");

@@ -5,7 +5,7 @@ async function deploy() {
   const LFGVesting: ContractFactory = await ethers.getContractFactory(
     "LFGVesting"
   );
-  const lfgVesting: Contract = await LFGVesting.deploy();
+  const lfgVesting: Contract = await LFGVesting.deploy(process.env.MULTISIG_PUBKEY);
   await lfgVesting.deployed();
   console.log("LFGVesting deployed to: ", lfgVesting.address);
 }
