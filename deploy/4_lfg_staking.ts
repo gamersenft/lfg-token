@@ -14,7 +14,10 @@ async function deploy() {
     0,
     0,
     5000,
-    600
+    600,
+    0,
+    0,
+    process.env.MULTISIG_PUBKEY
   );
   await gamersePool.deployed();
 

@@ -9,8 +9,8 @@ pragma experimental ABIEncoderV2;
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/SafeERC20Upgradeable.sol";
 
 // MasterChef is the master of LFG. He can make LFG and he is a fair guy.
 //
@@ -21,7 +21,7 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 // Have fun reading it. Hopefully it's bug-free. God bless.
 contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
     // Info of each user.
     struct UserInfo {
         uint256 amount; // How many LP tokens the user has provided.
@@ -42,7 +42,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     }
     // Info of each pool.
     struct PoolInfo {
-        IERC20 lpToken; // Address of LP token contract.
+        IERC20Upgradeable lpToken; // Address of LP token contract.
         uint256 allocPoint; // How many allocation points assigned to this pool. LFGs to distribute per block.
         uint256 lastRewardBlock; // Last block number that LFGs distribution occurs.
         uint256 accLFGPerShare; // Accumulated LFGs per share, times 1e12. See below.
@@ -50,7 +50,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 harvestInterval; // Harvest interval in seconds
     }
     // The LFG TOKEN!
-    IERC20 public lfg;
+    IERC20Upgradeable public lfg;
 
     // Deposit Fee address
     address public feeAddress;
@@ -60,12 +60,14 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     uint256 public lfgPerBlock;
     // Bonus muliplier for early lfg makers.
     uint256 public constant BONUS_MULTIPLIER = 1;
-    // Max harvest interval: 14 days.
+    // Max harvest interval: 10 days.
     uint256 public constant MAXIMUM_HARVEST_INTERVAL = 10 days;
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
     mapping(uint256 => mapping(address => UserInfo)) public userInfo;
+    // Mapping for already added tokens
+    mapping(IERC20Upgradeable => bool) public tokenMap;
     // Total allocation points. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint;
     // The block number when LFGs mining starts.
@@ -97,9 +99,10 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         address _feeAddress,
         address _rewardHolder,
         uint256 _startBlock,
-        uint256 _lfgPerBlock
+        uint256 _lfgPerBlock,
+        address owner
     ) public initializer {
-        lfg = IERC20(_lfg);
+        lfg = IERC20Upgradeable(_lfg);
         rewardHolder = _rewardHolder;
         startBlock = _startBlock;
         lfgPerBlock = _lfgPerBlock;
@@ -108,6 +111,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         totalAllocPoint = 0;
         __Ownable_init();
         __ReentrancyGuard_init();
+        transferOwnership(owner);
     }
 
     function poolLength() external view returns (uint256) {
@@ -118,19 +122,18 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
     function add(
         uint256 _allocPoint,
-        IERC20 _lpToken,
+        IERC20Upgradeable _lpToken,
         uint16 _depositFeeBP,
-        uint256 _harvestInterval,
-        bool _withUpdate
+        uint256 _harvestInterval
     ) public onlyOwner {
+        require(tokenMap[_lpToken] == false, "add: token is already present");
         require(_depositFeeBP <= 500, "add: invalid deposit fee basis points");
         require(
             _harvestInterval <= MAXIMUM_HARVEST_INTERVAL,
             "add: invalid harvest interval"
         );
-        if (_withUpdate) {
-            massUpdatePools();
-        }
+        massUpdatePools();
+        
         uint256 lastRewardBlock = block.number > startBlock
             ? block.number
             : startBlock;
@@ -145,6 +148,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
                 harvestInterval: _harvestInterval
             })
         );
+        tokenMap[_lpToken] = true;
     }
 
     // Update the given pool's LFGs allocation point and deposit fee. Can only be called by the owner.
@@ -152,17 +156,16 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         uint256 _pid,
         uint256 _allocPoint,
         uint16 _depositFeeBP,
-        uint256 _harvestInterval,
-        bool _withUpdate
+        uint256 _harvestInterval
     ) public onlyOwner {
+        require(_pid < poolInfo.length , "set: pool does not exist.");
         require(_depositFeeBP <= 500, "set: invalid deposit fee basis points");
         require(
             _harvestInterval <= MAXIMUM_HARVEST_INTERVAL,
             "set: invalid harvest interval"
         );
-        if (_withUpdate) {
-            massUpdatePools();
-        }
+        massUpdatePools();
+        
         totalAllocPoint = totalAllocPoint.sub(poolInfo[_pid].allocPoint).add(
             _allocPoint
         );
@@ -186,6 +189,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         view
         returns (uint256)
     {
+        require(_pid < poolInfo.length , "pendingLFG: pool does not exist.");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][_user];
         uint256 accLFGPerShare = pool.accLFGPerShare;
@@ -229,6 +233,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // Update reward variables of the given pool to be up-to-date.
     function updatePool(uint256 _pid) public {
+        require(_pid < poolInfo.length , "updatePool: pool does not exist.");
         PoolInfo storage pool = poolInfo[_pid];
         if (block.number <= pool.lastRewardBlock) {
             return;
@@ -252,6 +257,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // Deposit LP tokens to MasterChef for LFGs allocation.
     function deposit(uint256 _pid, uint256 _amount) public nonReentrant {
+        require(_pid < poolInfo.length , "deposit: pool does not exist.");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         updatePool(_pid);
@@ -277,6 +283,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // Withdraw LP tokens from MasterChef.
     function withdraw(uint256 _pid, uint256 _amount) public nonReentrant {
+        require(_pid < poolInfo.length , "withdraw: pool does not exist.");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         require(user.amount >= _amount, "withdraw: not good");
@@ -294,6 +301,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     function compound(uint256 _pid) public nonReentrant {
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
+        require(_pid < poolInfo.length , "set: pool does not exist.");
         require(
             address(pool.lpToken) == address(lfg),
             "compound: not able to compound"
@@ -310,6 +318,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw(uint256 _pid) public nonReentrant {
+        require(_pid < poolInfo.length , "emergencyWithdraw: pool does not exist.");
         PoolInfo storage pool = poolInfo[_pid];
         UserInfo storage user = userInfo[_pid][msg.sender];
         uint256 amount = user.amount;
@@ -362,7 +371,7 @@ contract LFGMasterChef is OwnableUpgradeable, ReentrancyGuardUpgradeable {
         if (_amount > lfgBal) {
             revert("Not enough balance");
         } else {
-            lfg.transferFrom(_from, _to, _amount);
+            lfg.safeTransferFrom(_from, _to, _amount);
         }
     }
 

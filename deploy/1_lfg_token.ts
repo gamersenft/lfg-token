@@ -6,7 +6,8 @@ async function deploy() {
   const lfgToken: Contract = await LFGToken.deploy(
     "LFG Token",
     "LFG",
-    "1000000000000000000000000000"
+    "1000000000000000000000000000",
+    process.env.MULTISIG_PUBKEY
   );
   await lfgToken.deployed();
 

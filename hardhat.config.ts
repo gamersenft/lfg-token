@@ -64,7 +64,7 @@ const config = {
     artifacts: "./artifacts",
     cache: "./cache",
     sources: "./contracts",
-    tests: "./tests",
+    tests: "./test",
   },
   solidity: {
     compilers: [
@@ -79,7 +79,7 @@ const config = {
         settings: {},
       },
       {
-        version: "0.8.0",
+        version: "0.8.8",
         settings: {},
       },
     ],
