@@ -25,7 +25,7 @@ module.exports = async function (deployer, network, accounts) {
     5000,                                          // _penaltyFee
     2592000,                                       // _penaltyDuration
     "10000000000000000000000",                     // _adMinStakeAmount
-    3600 * 24 * 80                                 // _adDuration
+    28780 * 80                                     // _adDuration in blocks
   );
 
   // // /** get instance of deployed LFGVesting contract */
