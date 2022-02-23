@@ -198,7 +198,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
         }
 
         if (pending != 0) {
-            if (block.timestamp < user.penaltyUntil) {
+            // If user withdraw after the pool ends, then no penalty
+            if (block.timestamp < user.penaltyUntil && block.number < bonusEndBlock) {
                 uint256 penaltyAmount = pending.mul(penaltyFee).div(10000);
                 rewardToken.safeTransferFrom(rewardHolder, custodyAddress, penaltyAmount);
                 emit RewardPenalized(msg.sender, penaltyAmount);
