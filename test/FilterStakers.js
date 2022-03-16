@@ -16,6 +16,8 @@ stakingInst.methods.startBlock().call(function (err, result) {
 
 let stakersMap = new Map();
 
+const threshold = new BigNumber(1e22);
+
 stakingInst.getPastEvents('Deposit', {
    fromBlock: 14300586,
    toBlock: 14304850
@@ -24,9 +26,10 @@ stakingInst.getPastEvents('Deposit', {
    for(let i = 0; i < events.length; ++i) {
    const event = events[i];
    const user = event["returnValues"]["user"];
+   const amount = new BigNumber(event["returnValues"]["amount"]);
    const block = event["blockNumber"];
-   if (!stakersMap.has(user)) {
-      console.log("User,",user,",start_block,",block);
+   if (!stakersMap.has(user) && amount.isGreaterThan(threshold)) {
+      console.log("User,",user,",amount,", event["returnValues"]["amount"],",start_block,",block);
       stakersMap.set(user, block);
    }
 } });
