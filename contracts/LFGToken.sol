@@ -50,7 +50,7 @@ contract LFGToken is ERC20, Ownable {
     }
 
     function setBPAddrss(address _bp) external onlyOwner {
-        require(address(BP) == address(0), "Can only be initialized once");
+        require(_bp != address(0), "Invalid address");
         BP = BPContract(_bp);
     }
 
