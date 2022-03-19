@@ -23,12 +23,6 @@ if (!process.env.MAINNET_PRIVKEY)
 const config = {
   defaultNetwork: "hardhat",
   networks: {
-    hardhat: {
-      forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-        blockNumber: 11589707,
-      },
-    },
     mumbai: {
       chainId: 80001,
       url: `https://polygon-mumbai.g.alchemy.com/v2/${process.env.ALCHEMY_KEY}`,
