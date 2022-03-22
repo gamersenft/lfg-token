@@ -34,9 +34,12 @@ contract LFGToken is ERC20, Ownable {
     constructor(
         string memory name,
         string memory symbol,
-        uint256 initialSupply
+        uint256 initialSupply,
+        address owner
     ) public ERC20(name, symbol) {
-        _mint(_msgSender(), initialSupply);
+        require(owner != address(0), "Invalid owner address");
+        _mint(owner, initialSupply);
+        transferOwnership(owner);
     }
 
     /**
