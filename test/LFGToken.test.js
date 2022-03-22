@@ -13,11 +13,11 @@ describe("LFGToken", function () {
   before("Deploy contract", async function () {
     try {
       [accounts[0], accounts[1], accounts[2], owner] = await web3.eth.getAccounts();
-      LFGToken = await LFGTokenArt.new("LFGToken", "LFG", "10000000000000000000");
+      LFGToken = await LFGTokenArt.new("LFGToken", "LFG", "10000000000000000000", owner);
       BPContract = await BPContractArt.new(owner);
 
-      await LFGToken.setBPAddress(BPContract.address);
-      await LFGToken.setBpEnabled(true);
+      await LFGToken.setBPAddress(BPContract.address, {from: owner});
+      await LFGToken.setBpEnabled(true, {from: owner});
     } catch (err) {
       console.log(err);
     }
@@ -25,7 +25,7 @@ describe("LFGToken", function () {
 
   it("test token transfer", async function () {
     let testAmount = "100000000";
-    await LFGToken.transfer(accounts[1], testAmount, {from: accounts[0]});
+    await LFGToken.transfer(accounts[1], testAmount, {from: owner});
     let account1Bal = await LFGToken.balanceOf(accounts[1]);
     assert.equal(account1Bal.toString(), testAmount);
 
