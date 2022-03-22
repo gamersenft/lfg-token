@@ -14,7 +14,7 @@ abstract contract BPContract {
         address sender,
         address receiver,
         uint256 amount
-    ) external virtual;
+    ) external virtual view;
 }
 
 contract LFGToken is ERC20, Ownable {
@@ -49,8 +49,8 @@ contract LFGToken is ERC20, Ownable {
         return true;
     }
 
-    function setBPAddrss(address _bp) external onlyOwner {
-        require(address(BP) == address(0), "Can only be initialized once");
+    function setBPAddress(address _bp) external onlyOwner {
+        require(_bp != address(0), "Invalid address");
         BP = BPContract(_bp);
     }
 
