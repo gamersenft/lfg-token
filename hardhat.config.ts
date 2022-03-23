@@ -52,7 +52,7 @@ const config = {
     },
   },
   etherscan: {
-    apiKey: process.env.POLYSCAN_API,
+    apiKey: process.env.BSCSCAN_API
   },
   paths: {
     artifacts: "./artifacts",
@@ -90,7 +90,7 @@ const config = {
   typechain: {
     outDir: "types/contracts",
     target: "truffle-v5",
-  },
+  }
 };
 
 export default config;
