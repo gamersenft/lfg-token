@@ -11,6 +11,8 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 contract TokenAirDrop is Ownable {
 
+    using SafeERC20 for IERC20;
+
     event AirDrop(address recipient, uint256 amount);
 
     IERC20 public lfgToken;
@@ -44,7 +46,7 @@ contract TokenAirDrop is Ownable {
     {
         require(_recipients.length == _amounts.length);
         for (uint256 i = 0; i < _amounts.length; i++) {
-            lfgToken.transfer(_recipients[i], _amounts[i]);
+            lfgToken.safeTransfer(_recipients[i], _amounts[i]);
 
             emit AirDrop(_recipients[i], _amounts[i]);
         }
