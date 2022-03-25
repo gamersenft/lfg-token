@@ -24,10 +24,12 @@ describe("TokenAirDrop", function () {
   before("Deploy contract", async function () {
     try {
       [accounts[0], accounts[1], accounts[2], owner] = await web3.eth.getAccounts();
-      LFGToken = await LFGTokenArt.new("LFGToken", "LFG", "1000000000000000000000000000");
+      console.log("owner ", owner);
+      LFGToken = await LFGTokenArt.new("LFGToken", "LFG", "1000000000000000000000000000", owner);
+
       TokenAirDrop = await TokenAirDropArt.new(owner, LFGToken.address);
 
-      await LFGToken.transfer(TokenAirDrop.address, "1000000000000000000000000000");
+      await LFGToken.transfer(TokenAirDrop.address, "1000000000000000000000000000", {from: owner});
     } catch (err) {
       console.log(err);
     }
@@ -84,8 +86,19 @@ describe("TokenAirDrop", function () {
         addresses.push(dataArray[index][0]);
         amounts.push(dataArray[index][2]);
       }
-      //console.log(addresses);
-      //console.log(amounts);
+
+      let strAddresses;
+      for (let index in addresses) {
+        //console.log(addresses[index], ",");
+        strAddresses = strAddresses.concat(addresses[0],",");
+      }
+      console.log(strAddresses);
+
+      let strAmounts = "";
+      for (let index in amounts) {
+        strAmounts = strAmounts.concat(amounts[index], ",");
+      }
+      console.log(strAmounts);
 
       await TokenAirDrop.airDrop(addresses, amounts, {from: owner});
 
