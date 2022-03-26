@@ -428,4 +428,13 @@ contract GamersePool is Ownable, ReentrancyGuard {
     function updateMaxStakeAmount(uint256 amount) external onlyOwner {
         maxStakeAmount = amount;
     }
+
+    function updateAdMinStakeAmount(uint256 _adMinStakeAmount) external onlyOwner {
+        adMinStakeAmount = _adMinStakeAmount;
+    }
+
+    function updateAdDuration(uint256 _adDuration) external onlyOwner {
+        require(_adDuration <= MAXIMUM_AIRDROP_DURATION, "Invalid airdrop duration");
+        adDuration = _adDuration;
+    }
 }
