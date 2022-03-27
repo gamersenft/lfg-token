@@ -62,7 +62,7 @@ contract LFGToken is ERC20, Ownable {
     }
 
     function setBotProtectionDisableForever() external onlyOwner {
-        require(BPDisabledForever == false);
+        require(BPDisabledForever == false, "BP is already disabled forever");
         BPDisabledForever = true;
     }
 

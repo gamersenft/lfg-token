@@ -27,18 +27,19 @@ contract GamersePool is Ownable, ReentrancyGuard {
     uint256 public rewardPerBlock;
 
     // The precision factor
-    uint256 public PRECISION_FACTOR;
+    uint256 public immutable PRECISION_FACTOR;
 
-    // The reward token
+    // The reward token. It cannot mark as immutable because need to read its
+    // precision in constructor.
     IBEP20 public rewardToken;
 
     // The staked token
-    IBEP20 public stakedToken;
+    IBEP20 public immutable stakedToken;
 
     // Max penalty fee: 50%
     uint256 public constant MAXIMUM_PENALTY_FEE = 5000;
 
-    // Max penalty duration: 14 days
+    // Max penalty duration: 30 days
     uint256 public constant MAXIMUM_PENALTY_DURATION = 30 days;
 
     // Max airdrop staking duration
@@ -54,9 +55,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
     uint256 public penaltyDuration;
 
     // Reward Holder address
-    address public rewardHolder;
+    address public immutable rewardHolder;
 
-    // custody address
+    // custody address, the penalized rewards go to this address
     address public custodyAddress;
 
     // airdrop NFT minimum staking amount
@@ -136,8 +137,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
     }
 
     /*
-     * @notice Deposit staked tokens and collect reward tokens (if any)
-     * @param _amount: amount to withdraw (in rewardToken)
+     * @notice Deposit staked tokens and calculate the reward tokens.
+     * @param _amount: amount to deposit (in stakedToken)
      */
     function deposit(uint256 _amount) external nonReentrant {
         UserInfo storage user = userInfo[msg.sender];
@@ -175,8 +176,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
     }
 
     /*
-     * @notice Withdraw staked tokens and collect reward tokens
-     * @param _amount: amount to withdraw (in rewardToken)
+     * @notice Withdraw staked tokens and collect reward tokens. If withdraw
+     *         before penaltyUntil then part of the rewards will be penalized.
+     * @param _amount: amount to withdraw (in stakedToken)
      */
     function withdraw(uint256 _amount) external nonReentrant {
         UserInfo storage user = userInfo[msg.sender];
