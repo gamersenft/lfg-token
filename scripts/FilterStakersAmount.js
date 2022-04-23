@@ -54,7 +54,7 @@ const initFunction = async () => {
   }
 
   const fs = require("fs");
-  const file1 = fs.createWriteStream("top1.txt");
+  const file1 = fs.createWriteStream("data/top1.txt");
   Object.keys(results).forEach((v) => {
     file1.write(v + " " + results[v] + "\n");
   });
@@ -68,7 +68,7 @@ const initFunction = async () => {
 
   console.log(response.length);
 
-  const file = fs.createWriteStream("top.txt");
+  const file = fs.createWriteStream("data/top.txt");
   response.forEach((v) => {
     file.write(v + "\n");
   });
