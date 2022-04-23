@@ -20,8 +20,6 @@ abstract contract BPContract {
 contract LFGToken is ERC20, Ownable {
     using SafeMath for uint256;
 
-    address public constant DEAD_ADDRESS = 0x000000000000000000000000000000000000dEaD;
-
     BPContract public BP;
     bool public bpEnabled;
     bool public BPDisabledForever = false;
@@ -40,16 +38,6 @@ contract LFGToken is ERC20, Ownable {
         require(owner != address(0), "Invalid owner address");
         _mint(owner, initialSupply);
         transferOwnership(owner);
-    }
-
-    /**
-     *
-     * @dev lock tokens by sending to DEAD address
-     *
-     */
-    function lockTokens(uint256 amount) external onlyOwner returns (bool) {
-        _transfer(_msgSender(), DEAD_ADDRESS, amount);
-        return true;
     }
 
     function setBPAddress(address _bp) external onlyOwner {
