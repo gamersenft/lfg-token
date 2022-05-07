@@ -6,8 +6,8 @@ async function deploy() {
     "TokenAirDrop"
   );
   const tokenAirDrop: Contract = await TokenAirDrop.deploy(
-    "0xF42EBbF89D8fB9eA0a87d836C49CfD688EC5b2b6", // owner
-    "0xF93f6b686f4A6557151455189a9173735D668154"  // token
+    "0x3ca3822163D049364E67bE19a0D3B2F03B7e99b5", // owner
+    "0xc4f7Cf2Cbc05970105f424586eeCAF96F980Db8d"  // token
   );
   await tokenAirDrop.deployed();
 
