@@ -4,7 +4,6 @@ const {web3} = require("hardhat");
 const LFGTokenArt = hre.artifacts.require("LFGToken");
 const LFGVestingArt = hre.artifacts.require("LFGVesting");
 const BN = require("bn.js");
-const {createImportSpecifier} = require("typescript");
 
 describe("LFGVesting", function () {
   let LFGToken = null;
