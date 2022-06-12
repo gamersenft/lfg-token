@@ -32,7 +32,7 @@ const config = {
       chainId: 137,
       url: "https://polygon-rpc.com",
       accounts: [process.env.MAINNET_PRIVKEY],
-      gasPrice: 8000000000,
+      gasPrice: 20e10,
     },
     bsctest: {
       accounts: [process.env.MUMBAI_PRIVKEY || ""],
