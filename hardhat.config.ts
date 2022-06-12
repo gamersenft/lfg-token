@@ -52,7 +52,7 @@ const config = {
     },
   },
   etherscan: {
-    apiKey: process.env.BSCSCAN_API
+    apiKey: process.env.POLYSCAN_API
   },
   paths: {
     artifacts: "./artifacts",
