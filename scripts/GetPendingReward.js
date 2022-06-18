@@ -14,20 +14,11 @@ const stakingInst = new testWeb3.eth.Contract(abi, "0xc06dfe944556CDC44807BcD524
 
 stakedAddress = {};
 
-lineReader.eachLine("./Data/top1.txt", (line, last) => {
+lineReader.eachLine("./Data/polygon_top1.txt", (line, last) => {
   const array = line.split(" ");
   stakedAddress[array[0]] = new BigNumber(array[1]);
 
   stakingInst.methods.pendingReward(array[0]).call(function (err, result) {
-    console.log(array[0], " ", result);
+    console.log(array[0], result);
   });
 });
-
-// console.log(stakedAddress);
-
-// for (const address in stakedAddress) {
-//   console.log(address);
-//   stakingInst.methods.pendingReward(address).call(function (err, result) {
-//     console.log(result);
-//   });
-// }

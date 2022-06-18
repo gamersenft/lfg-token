@@ -8,7 +8,7 @@ stakedAddress = {};
 
 BigNumber.config({EXPONENTIAL_AT: 30});
 
-const buffer1 = fs.readFileSync("./Data/top1.txt");
+const buffer1 = fs.readFileSync("./Data/polygon_top1.txt");
 
 let content = buffer1.toString();
 let lines = content.split(/\r?\n/);
@@ -37,5 +37,5 @@ for (const index in lines) {
 
 for (const address in deposits) {
   let sum = deposits[address].plus(rewards[address]);
-  console.log(address, deposits[address].toString(), rewards[address].toString(), sum.toString());
+  console.log(address + "," + deposits[address].toString() + "," + rewards[address].toString() + "," + sum.toString());
 }
