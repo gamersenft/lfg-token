@@ -27,10 +27,10 @@ describe("GamersePool", function () {
         rewardHolder, // process.env.REWARD_HOLDER_ADDRESS,
         custodyAddress, // process.env.CUSTODY_ADDRESS,
         "3474635163300000000", // reward per block
-        "100", //start block
+        "20", //start block
         "1000", // bonus end block
         "5000", // _penaltyFee
-        "100", // Panalty duration
+        "10000", // Panalty duration
         "10000000000000000000000", // _adMinStakeAmount
         "200" // _adDuration
       );

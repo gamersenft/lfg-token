@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// The difference with GamersePool is without rewardHolder
 
 pragma solidity 0.6.12;
 
@@ -7,7 +8,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./libs/SafeBEP20.sol";
 
-contract GamersePool is Ownable, ReentrancyGuard {
+contract GamersePool2 is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeBEP20 for IBEP20;
 
@@ -25,9 +26,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
 
     // GAMERSE tokens created per block.
     uint256 public rewardPerBlock;
-
-    // The total reward amount been used
-    uint256 public rewardedAmount;
 
     // The precision factor
     uint256 public immutable PRECISION_FACTOR;
@@ -54,11 +52,14 @@ contract GamersePool is Ownable, ReentrancyGuard {
     // Penalty Fee
     uint256 public penaltyFee;
 
-    // Penalty Duration
+    // Penalty Duration in seconds
     uint256 public penaltyDuration;
 
-    // Reward Holder address
-    address public rewardHolder;
+    // The balance left to reward stakers
+    uint256 public rewardBalance;
+
+    // The total reward amount been used
+    uint256 public rewardedAmount;
 
     // custody address, the penalized rewards go to this address
     address public custodyAddress;
@@ -100,9 +101,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
     event RewardPenalized(address indexed account, uint256 amount);
 
     constructor(
+        address _owner,
         IBEP20 _stakedToken,
         IBEP20 _rewardToken,
-        address _rewardHolder,
         address _custodyAddress,
         uint256 _rewardPerBlock,
         uint256 _startBlock,
@@ -117,6 +118,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
         require(_custodyAddress != address(0), "Invalid custody address");
         require(_adDuration <= MAXIMUM_AIRDROP_DURATION, "Invalid airdrop duration");
 
+        require(_owner != address(0), "Invalid owner address");
+        transferOwnership(_owner);
+
         stakedToken = _stakedToken;
         rewardToken = _rewardToken;
         rewardPerBlock = _rewardPerBlock;
@@ -124,7 +128,6 @@ contract GamersePool is Ownable, ReentrancyGuard {
         bonusEndBlock = _bonusEndBlock;
         penaltyFee = _penaltyFee;
         penaltyDuration = _penaltyDuration;
-        rewardHolder = _rewardHolder;
         custodyAddress = _custodyAddress;
         adMinStakeAmount = _adMinStakeAmount;
         adDuration = _adDuration;
@@ -196,6 +199,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
             .sub(user.rewardDebt)
             .add(user.rewardDeposit);
 
+        require(rewardBalance >= pending, "Reward balance is not enough");
+
         if (_amount != 0) {
             user.amount = user.amount.sub(_amount);
             stakedToken.safeTransfer(address(msg.sender), _amount);
@@ -203,23 +208,20 @@ contract GamersePool is Ownable, ReentrancyGuard {
         }
 
         if (pending != 0) {
+            rewardBalance = rewardBalance.sub(pending);
             // This also includes burned amount, because burned amount also come from reward balance
             rewardedAmount = rewardedAmount.add(pending);
 
             // If user withdraw after the pool ends, then no penalty
             if (block.timestamp < user.penaltyUntil && block.number < bonusEndBlock) {
                 uint256 penaltyAmount = pending.mul(penaltyFee).div(10000);
-                rewardToken.safeTransferFrom(rewardHolder, custodyAddress, penaltyAmount);
+                rewardToken.safeTransfer(custodyAddress, penaltyAmount);
                 emit RewardPenalized(msg.sender, penaltyAmount);
 
-                rewardToken.safeTransferFrom(
-                    rewardHolder,
-                    address(msg.sender),
-                    pending.sub(penaltyAmount)
-                );
+                rewardToken.safeTransfer(address(msg.sender), pending.sub(penaltyAmount));
                 emit RewardClaimed(msg.sender, pending.sub(penaltyAmount));
             } else {
-                rewardToken.safeTransferFrom(rewardHolder, address(msg.sender), pending);
+                rewardToken.safeTransfer(address(msg.sender), pending);
                 emit RewardClaimed(msg.sender, pending);
             }
             user.rewardDeposit = 0;
@@ -446,13 +448,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
         adDuration = _adDuration;
     }
 
-    /*
-     * @notice Update the reward holder address
-     * @dev Only callable by owner.
-     * @param _rewardHolder: The new reward holder address
-     */
-    function updateRewardHolder(address _rewardHolder) external onlyOwner {
-        require(_rewardHolder != address(0), "Invalid address");
-        rewardHolder = _rewardHolder;
+    function addReward(uint256 _amount) external onlyOwner {
+        require(_amount > 0, "Invalid amount");
+        stakedToken.safeTransferFrom(address(msg.sender), address(this), _amount);
+        rewardBalance = rewardBalance.add(_amount);
     }
 }
