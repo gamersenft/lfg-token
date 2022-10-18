@@ -9,13 +9,13 @@ var abi = parsed.abi;
 
 const testWeb3 = new Web3("https://polygon-rpc.com/");
 
-const stakingInst = new testWeb3.eth.Contract(abi, "0xc06dfe944556CDC44807BcD5240625dF08D18556");
+const stakingInst = new testWeb3.eth.Contract(abi, "0x09B7e814E56544Faa2306a83d17728d53CD23C49");
 stakingInst.methods.startBlock().call(function (err, result) {
   console.log(result);
 });
 
-const startBlock = 29275960;
-const endBlock = startBlock + ((3600 * 24) / 3) * 7;
+const startBlock = 29637408;
+const endBlock = startBlock + ((3600 * 24) / 2) * 7;
 const duration = 5000;
 
 const initFunction = async () => {
@@ -43,7 +43,7 @@ const initFunction = async () => {
 
   for (i = 0; i < events.length; i++) {
     const user = events[i]["returnValues"]["user"];
-    const amount = new BigNumber(events[i]["returnValues"]["amount"]);
+    const amount = new BigNumber(events[i]["returnValues"]["amount"]).div(new BigNumber(10).pow(18)).toNumber();
     if (!results[user]) {
       results[user] = new BigNumber("0");
     }
