@@ -75,8 +75,14 @@ contract GamersePool is Ownable, ReentrancyGuard {
     // Total staked amount of all user
     uint256 public totalStakedAmount;
 
+    // Total penalized amount
+    uint256 public totalPenelizedAmount;
+
     // Info of each user that stakes tokens (stakedToken)
     mapping(address => UserInfo) public userInfo;
+
+    // All the users that staked
+    address[] public userAddresses;
 
     struct UserInfo {
         uint256 amount; // How many staked tokens the user has provided
@@ -161,6 +167,10 @@ contract GamersePool is Ownable, ReentrancyGuard {
         }
 
         if (_amount != 0) {
+            // Put the user to address lists at the first time
+            if (user.amount <= 0) {
+                userAddresses.push(address(msg.sender));
+            }
             stakedToken.safeTransferFrom(address(msg.sender), address(this), _amount);
             user.amount = user.amount.add(_amount);
             user.lastDeposit = block.timestamp;
@@ -211,6 +221,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
                 uint256 penaltyAmount = pending.mul(penaltyFee).div(10000);
                 rewardToken.safeTransferFrom(rewardHolder, custodyAddress, penaltyAmount);
                 emit RewardPenalized(msg.sender, penaltyAmount);
+
+                totalPenelizedAmount = totalPenelizedAmount.add(penaltyAmount);
 
                 rewardToken.safeTransferFrom(
                     rewardHolder,
@@ -454,5 +466,9 @@ contract GamersePool is Ownable, ReentrancyGuard {
     function updateRewardHolder(address _rewardHolder) external onlyOwner {
         require(_rewardHolder != address(0), "Invalid address");
         rewardHolder = _rewardHolder;
+    }
+
+    function getAllUsers() external view returns (address[] memory) {
+        return userAddresses;
     }
 }
