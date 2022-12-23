@@ -411,7 +411,8 @@ contract GamersePool is Ownable, ReentrancyGuard {
 
         UserInfo storage user = userInfo[msg.sender];
 
-        if (user.amount < adMinStakeAmount) {
+        // If user the staked duration less then the airdrop reqired duration, then clear the adStartBlock
+        if (user.amount < adMinStakeAmount && user.adStartBlock.add(adDuration) > block.number) {
             user.adStartBlock = 0;
             return;
         }
