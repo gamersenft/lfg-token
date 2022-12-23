@@ -15,7 +15,7 @@ async function deploy() {
     "25996500", // 60 days, every day 28780 blocks
     "5000",     // 50%
     "1728000",  // 20 days, 20 * 24 * 3600
-    "10000000000000000000000", // minimum stake amount to get NFT airdrop, 10K
+    "50000000000000000000000", // minimum stake amount to get NFT airdrop, 50K
     "1439000" // minimum stake blocks to get NFT airdrop, 50 Days * 28780
   );
   await gamersePool.deployed();
